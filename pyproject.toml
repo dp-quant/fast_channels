@@ -1,0 +1,40 @@
+[project]
+name = "fast_channels"
+version = "0.1.0"
+description = "FastAPI + FastStream (Kafka, RabbitMQ) + gRPC experiments"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    "faststream[rabbit,kafka]>=0.5.0",
+    "grpcio>=1.68.0",
+    "grpcio-tools>=1.68.0",
+    "loguru>=0.7.0",
+    "fire>=0.7.0",
+    "orjson>=3.10.0",
+    "pydantic-settings>=2.0.0",
+    "supervisor>=4.2.0",
+    "pyjwt>=2.8.0",
+]
+
+[project.scripts]
+# tooling
+cli = "src.cli:main"
+
+# transports
+http = "src.transport.serve:http"
+rpc = "src.transport.serve:rpc"
+rabbit = "src.transport.serve:rabbit"
+kafka = "src.transport.serve:kafka"
+
+# run all transports
+run_all = "src.transport.serve:run_all"
+
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
