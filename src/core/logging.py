@@ -37,5 +37,4 @@ def configure_logger(settings: Settings) -> None:
     logger.remove()
     logger.add(sink, level=settings.log_level.upper())
 
-
-logger = configure_logger(settings)
+configure_logger(settings)

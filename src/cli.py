@@ -1,10 +1,17 @@
-"""CLI entrypoint (Fire) — real CLI actions only: proto, generate-jwt, etc."""
+"""CLI entrypoint (Fire) — real CLI actions only: proto, generate-jwt, send_task, send_event."""
 
+
+from datetime import datetime, timezone
+import random
+import string
 import subprocess
 import sys
+import uuid
+import requests
 from pathlib import Path
-
 import fire
+
+from src.core.logging import logger
 
 
 def proto():
@@ -22,8 +29,8 @@ def generate_jwt(
     try:
         import jwt
         from datetime import datetime, timedelta, timezone
-    except ImportError:
-        print("Install PyJWT: uv add pyjwt", file=sys.stderr)
+    except ImportError as e:
+        logger.error("Install PyJWT: uv add pyjwt")
         sys.exit(1)
     now = datetime.now(timezone.utc)
     payload = {
@@ -32,11 +39,64 @@ def generate_jwt(
         "exp": now + timedelta(hours=expires_hours),
     }
     token = jwt.encode(payload, secret, algorithm="HS256")
-    print(token)
+    logger.info(token)
+
+
+
+def send_task(base_url: str = "http://localhost:8000"):
+    """POST random payload to localhost /tasks (RabbitMQ producer)."""
+    url = f"{base_url.rstrip('/')}/tasks"
+    payload = _generate_random_payload()
+    session = _create_request_session()
+    req = session.post(url, json=payload, timeout=5)
+    logger.info(f"202 {url} -> {req.json()}")
+
+
+def send_event(base_url: str = "http://localhost:8000"):
+    """POST random payload to localhost /events (Kafka producer)."""
+    url = f"{base_url.rstrip('/')}/events"
+    payload = _generate_random_payload()
+    session = _create_request_session()
+    req = session.post(url, json=payload, timeout=5)
+    logger.info(f"202 {url} -> {req.json()}")
 
 
 def main():
     fire.Fire({
         "proto": proto,
         "generate-jwt": generate_jwt,
+        "send-task": send_task,
+        "send-event": send_event,
     })
+
+
+
+def _generate_random_payload() -> dict:
+    """Small random payload for send_task / send_event."""
+    return {
+        "id": str(uuid.uuid4()),
+        "name": "".join(random.choices(string.ascii_lowercase, k=8)),
+        "description": "".join(random.choices(string.ascii_lowercase, k=16)),
+        "tags": [
+            "".join(random.choices(string.ascii_lowercase, k=8))
+            for _ in range(random.randint(1, 5))
+        ],
+        "data": {
+            "seed": random.randint(1, 1_000_000),
+        },
+        "action_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+
+def _create_request_session(generate_trace_id: bool = False) -> requests.Session:
+    """Get a requests session with a timeout."""
+    session = requests.Session()
+    session.headers.update({
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+    })
+    if generate_trace_id:
+        session.headers["X-Request-Id"] = str(uuid.uuid4())
+        session.headers["X-Request-Timestamp"] = datetime.now(timezone.utc).isoformat()
+    return session
+

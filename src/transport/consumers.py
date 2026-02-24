@@ -4,14 +4,14 @@ import asyncio
 from faststream import FastStream
 from faststream.rabbit import RabbitBroker
 from faststream.kafka import KafkaBroker
-from loguru import logger
+from src.core.logging import logger
 
 from src.core import settings
 
 
 # ----- RabbitMQ (simple queue) -----
-rabbit_broker = RabbitBroker(settings.rabbit_url)
-rabbit_app = FastStream(rabbit_broker)
+rabbit_broker = RabbitBroker(settings.rabbit_url, logger=logger)
+rabbit_app = FastStream(rabbit_broker, logger=logger)
 
 
 @rabbit_broker.subscriber("tasks")
@@ -29,8 +29,8 @@ def run_rabbit():
 
 
 # ----- Kafka (stream) -----
-kafka_broker = KafkaBroker(settings.kafka_bootstrap_servers)
-kafka_app = FastStream(kafka_broker)
+kafka_broker = KafkaBroker(settings.kafka_bootstrap_servers, logger=logger)
+kafka_app = FastStream(kafka_broker, logger=logger)
 
 
 @kafka_broker.subscriber(settings.kafka_topic)

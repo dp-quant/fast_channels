@@ -1,10 +1,12 @@
 """FastAPI / REST implementation."""
 
+import orjson
 from fastapi import Body, FastAPI
 
 from src.core import settings
 from src.schemas.commands import ActionCreate
-from src.schemas.internal import ActionInternal 
+from src.schemas.internal import ActionInternal
+from src.transport.producers import publish_kafka_event, publish_rabbit_task
 from src.usecases.action import create_action
 from src.usecases.echo import echo_message
 
@@ -35,6 +37,22 @@ async def echo_path(message: str) -> dict:
 async def actions_create(cmd: ActionCreate):
     result = create_action(cmd)
     return result
+
+
+@app.post("/tasks", status_code=202)
+async def tasks_publish(body: dict = Body(...)):
+    """Publish a message to the RabbitMQ `tasks` queue. Returns 202 Accepted."""
+    payload = orjson.dumps(body).decode()
+    await publish_rabbit_task(payload)
+    return {"status": "accepted", "queue": "tasks"}
+
+
+@app.post("/events", status_code=202)
+async def events_publish(body: dict = Body(...)):
+    """Publish a message to the Kafka `events` topic. Returns 202 Accepted."""
+    payload = orjson.dumps(body).decode()
+    await publish_kafka_event(payload)
+    return {"status": "accepted", "topic": settings.kafka_topic}
 
 
 def run():

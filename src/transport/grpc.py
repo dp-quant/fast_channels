@@ -2,9 +2,9 @@
 
 import grpc
 from concurrent import futures
-from loguru import logger
 
 from src.core import settings
+from src.core.logging import logger
 from src.usecases.echo import echo_message
 
 try:

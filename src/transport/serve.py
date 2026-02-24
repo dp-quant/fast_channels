@@ -31,6 +31,20 @@ def kafka():
     run_kafka()
 
 
+def rabbit_producer(message: str = "hello from producer"):
+    """Publish one message to RabbitMQ `tasks` queue (producer only)."""
+    import asyncio
+    from src.transport.producers import publish_rabbit_task
+    asyncio.run(publish_rabbit_task(message))
+
+
+def kafka_producer(message: str = "hello from producer"):
+    """Publish one message to Kafka `events` topic (producer only)."""
+    import asyncio
+    from src.transport.producers import publish_kafka_event
+    asyncio.run(publish_kafka_event(message))
+
+
 def run_all():
     """Run http, rpc, rabbit, kafka under supervisord."""
     conf = Path(__file__).resolve().parent.parent.parent / "supervisord.conf"
@@ -46,6 +60,8 @@ def main():
         "rpc": rpc,
         "rabbit": rabbit,
         "kafka": kafka,
+        "rabbit-producer": rabbit_producer,
+        "kafka-producer": kafka_producer,
         "run-all": run_all,
     })
 

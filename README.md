@@ -2,10 +2,10 @@
 
 Layered app: **core** (config, models, service), **schemas** (contracts + proto), **transport** (HTTP, gRPC, Kafka/Rabbit), **reconciliation** (auditor).
 
-- **HTTP** – FastAPI (`/health`, `/echo`, `/orders`)
+- **HTTP** – FastAPI (`/health`, `/echo`, `/actions`, `/tasks`, `/events`)
 - **gRPC** – Echo service
-- **RabbitMQ** – queue consumer (`tasks`)
-- **Kafka** – stream consumer (`events`)
+- **RabbitMQ** – queue consumer (`tasks`) and producer (POST `/tasks` or `uv run app rabbit-producer`)
+- **Kafka** – stream consumer (`events`) and producer (POST `/events` or `uv run app kafka-producer`)
 
 **Stack:** loguru, fire, orjson, pydantic-settings, uv (or pip).
 
@@ -15,7 +15,7 @@ Layered app: **core** (config, models, service), **schemas** (contracts + proto)
 src/
   core/           # Config, models, service layer
   schemas/        # internal, commands, queries, proto
-  transport/      # http, grpc, consumers
+  transport/      # http, grpc, consumers, producers
   reconciliation/# engine, partitions
 ```
 
@@ -36,7 +36,14 @@ uv run kafka   # Kafka consumer (needs Kafka)
 uv run run-all # supervisord (all 4 in one process group)
 ```
 
-**CLI (Fire)** — real CLI actions only: `uv run app proto`, `uv run app generate-jwt --subject=alice`
+**Producers (one-off publish via Fire):**
+```bash
+uv run app rabbit-producer                    # publish "hello from producer" to tasks
+uv run app rabbit-producer --message='{"x":1}'
+uv run app kafka-producer --message='event payload'
+```
+
+**CLI (Fire)** — `uv run app proto`, `uv run app generate-jwt --subject=alice`
 
 ## Docker
 

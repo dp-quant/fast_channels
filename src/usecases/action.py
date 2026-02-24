@@ -1,6 +1,6 @@
 """Shared business logic (service layer)."""
 
-from loguru import logger
+from src.core.logging import logger
 
 from src.schemas.commands import ActionCreate
 from src.schemas.internal import ActionInternal
