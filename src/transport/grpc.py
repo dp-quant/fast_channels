@@ -1,29 +1,86 @@
 """gRPC servicers / server logic."""
 
-import grpc
+import asyncio
+import random
 from concurrent import futures
+from datetime import datetime, timezone
+
+import grpc
+from google.protobuf import timestamp_pb2
 
 from src.core import settings
 from src.core.logging import logger
+from src.schemas.commands import ActionCreate
+from src.schemas.proto.transforms.action import action_to_proto, proto_to_action
+from src.transport.producers import publish_kafka_event, publish_rabbit_task
+from src.usecases.action import create_action, update_action
+from src.schemas.entities import ActionContext
 from src.usecases.echo import echo_message
 
 try:
-    from src.schemas.proto import echo_pb2, echo_pb2_grpc
+    from src.schemas.proto import echo_pb2, echo_pb2_grpc, action_pb2, action_pb2_grpc
 except ImportError as e:
     raise ImportError(
-        "gRPC code not generated. Run: python scripts/generate_grpc.py (or build Docker image)"
+        "gRPC code not generated. Run: uv run cli proto (or build Docker image)"
     ) from e
 
 
 class EchoServicer(echo_pb2_grpc.EchoServiceServicer):
     def Echo(self, request, context):
         logger.info("gRPC Echo request: {}", request.message)
-        return echo_pb2.EchoReply(message=echo_message(request.message))
+        reply_msg = echo_message(request.message)
+
+        # Fan-out to messaging backends (fire-and-forget style)
+        try:
+            asyncio.run(publish_rabbit_task(f"grpc-echo: {request.message}"))
+        except Exception as exc:  # noqa: BLE001
+            logger.error("Failed to publish RabbitMQ message from gRPC: {}", exc)
+
+        try:
+            asyncio.run(
+                publish_kafka_event(
+                    f'{{"source":"grpc","kind":"echo","message":"{request.message}"}}'
+                )
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.error("Failed to publish Kafka event from gRPC: {}", exc)
+
+        return echo_pb2.EchoReply(message=reply_msg)
+
+
+class ActionServicer(action_pb2_grpc.ActionServiceServicer):
+    """gRPC ActionService backed by the existing usecases."""
+
+    def Create(self, request, context):
+        logger.info("gRPC Action.Create: name={}", request.name)
+
+        # Map proto -> command model
+        cmd = ActionCreate(
+            name=request.name,
+            description=request.description,
+            tags=list(request.tags),
+        )
+        action = create_action(cmd)
+
+        return action_to_proto(action)
+
+    def Update(self, request, context):
+        logger.info("gRPC Action.Update: id={}", request.id)
+
+        # In a real app we'd load Action by id; here we rebuild from the request.
+        action = proto_to_action(request)
+
+        updated = update_action(    
+            action,
+            ActionContext(seed=random.randint(1, 1000000), updated_at=datetime.now(timezone.utc)),
+        )
+        return action_to_proto(updated)
 
 
 def run():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     echo_pb2_grpc.add_EchoServiceServicer_to_server(EchoServicer(), server)
+    action_pb2_grpc.add_ActionServiceServicer_to_server(ActionServicer(), server)
     listen_addr = f"{settings.grpc_host}:{settings.grpc_port}"
     server.add_insecure_port(listen_addr)
     server.start()

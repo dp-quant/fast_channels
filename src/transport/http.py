@@ -5,7 +5,7 @@ from fastapi import Body, FastAPI
 
 from src.core import settings
 from src.schemas.commands import ActionCreate
-from src.schemas.internal import ActionInternal
+from src.schemas.entities import Action
 from src.transport.producers import publish_kafka_event, publish_rabbit_task
 from src.usecases.action import create_action
 from src.usecases.echo import echo_message
@@ -33,24 +33,24 @@ async def echo_path(message: str) -> dict:
     return {"message": echo_message(message)}
 
 
-@app.post("/actions", response_model=ActionInternal)
+@app.post("/actions", response_model=Action)
 async def actions_create(cmd: ActionCreate):
     result = create_action(cmd)
     return result
 
 
 @app.post("/tasks", status_code=202)
-async def tasks_publish(body: dict = Body(...)):
+async def tasks_publish(action: Action):
     """Publish a message to the RabbitMQ `tasks` queue. Returns 202 Accepted."""
-    payload = orjson.dumps(body).decode()
+    payload = orjson.dumps(action.model_dump(mode="json")).decode()
     await publish_rabbit_task(payload)
     return {"status": "accepted", "queue": "tasks"}
 
 
 @app.post("/events", status_code=202)
-async def events_publish(body: dict = Body(...)):
+async def events_publish(action: Action):
     """Publish a message to the Kafka `events` topic. Returns 202 Accepted."""
-    payload = orjson.dumps(body).decode()
+    payload = orjson.dumps(action.model_dump(mode="json")).decode()
     await publish_kafka_event(payload)
     return {"status": "accepted", "topic": settings.kafka_topic}
 

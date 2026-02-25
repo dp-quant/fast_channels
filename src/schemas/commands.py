@@ -9,6 +9,4 @@ class ActionCreate(BaseModel):
     name: str = Field(..., min_length=1)
     description: str = Field(..., min_length=1)
     tags: list[str] = Field(default_factory=list)
-    data: dict = Field(default_factory=dict)
-    action_at: datetime = Field(default_factory=datetime.now)
     

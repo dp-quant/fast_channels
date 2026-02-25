@@ -13,6 +13,8 @@ KAFKA_TOPIC = settings.kafka_topic
 
 async def publish_rabbit_task(message: str) -> None:
     """Publish a message to the RabbitMQ `tasks` queue."""
+    logger.info("Publishing to RabbitMQ queue={}: {}", RABBIT_QUEUE, message[:80])
+    logger.info("Message: {}", message)
     broker = RabbitBroker(settings.rabbit_url)
     async with broker:
         await broker.publish(message, queue=RABBIT_QUEUE)

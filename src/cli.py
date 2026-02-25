@@ -12,7 +12,8 @@ from pathlib import Path
 import fire
 
 from src.core.logging import logger
-
+from src.schemas.commands import ActionCreate
+from src.usecases.action import create_action
 
 def proto():
     """Generate gRPC Python code from proto files."""
@@ -73,20 +74,17 @@ def main():
 
 def _generate_random_payload() -> dict:
     """Small random payload for send_task / send_event."""
-    return {
-        "id": str(uuid.uuid4()),
-        "name": "".join(random.choices(string.ascii_lowercase, k=8)),
-        "description": "".join(random.choices(string.ascii_lowercase, k=16)),
-        "tags": [
+    action = ActionCreate(
+        name="".join(random.choices(string.ascii_lowercase, k=8)),
+        description="".join(random.choices(string.ascii_lowercase, k=16)),
+        tags=[
             "".join(random.choices(string.ascii_lowercase, k=8))
             for _ in range(random.randint(1, 5))
         ],
-        "data": {
-            "seed": random.randint(1, 1_000_000),
-        },
-        "action_at": datetime.now(timezone.utc).isoformat(),
-    }
-
+    )
+    action = create_action(action)
+    # Ensure all fields are JSON-serializable (e.g. datetimes -> ISO strings)
+    return action.model_dump(mode="json")
 
 def _create_request_session(generate_trace_id: bool = False) -> requests.Session:
     """Get a requests session with a timeout."""

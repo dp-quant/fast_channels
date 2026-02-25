@@ -21,10 +21,12 @@ class Settings(BaseSettings):
 
     # HTTP
     http_host: str = "0.0.0.0"
+    http_host_internal: str = "http"
     http_port: int = 8000
 
     # gRPC
     grpc_host: str = "0.0.0.0"
+    grpc_host_internal: str = "grpc"
     grpc_port: int = 50051
 
     # Logging
