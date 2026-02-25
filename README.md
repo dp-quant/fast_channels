@@ -16,7 +16,6 @@ src/
   core/           # Config, models, service layer
   schemas/        # internal, commands, queries, proto
   transport/      # http, grpc, consumers, producers
-  reconciliation/# engine, partitions
 ```
 
 ## Local setup
@@ -26,24 +25,26 @@ uv sync
 uv run proto   # generate gRPC code (or use Docker)
 ```
 
-## Run locally (uv scripts)
+## Run locally (uv scripts) - Still in TODO
 
 ```bash
 uv run http    # HTTP :8000
 uv run rpc     # gRPC :50051
 uv run rabbit  # Rabbit consumer (needs RabbitMQ)
 uv run kafka   # Kafka consumer (needs Kafka)
-uv run run-all # supervisord (all 4 in one process group)
+uv run all    # supervisord (all 4 in one process group)
 ```
 
-**Producers (one-off publish via Fire):**
+**Tooling (Fire)**
+
+CLI tooling (`uv run cli`):
 ```bash
-uv run app rabbit-producer                    # publish "hello from producer" to tasks
-uv run app rabbit-producer --message='{"x":1}'
-uv run app kafka-producer --message='event payload'
+uv run cli proto                          # generate gRPC stubs
+uv run cli generate-jwt --subject=alice   # JWT for dev/testing
+uv run cli send-task                      # POST random action to /tasks (needs HTTP up)
+uv run cli send-event                     # POST random action to /events (needs HTTP up)
+uv run cli send-task --base_url=http://localhost:8000
 ```
-
-**CLI (Fire)** — `uv run app proto`, `uv run app generate-jwt --subject=alice`
 
 ## Docker
 
@@ -59,3 +60,15 @@ docker compose up --build
 - **Kafka:** localhost:9092  
 
 **One-pod (all in one container):** override CMD with `supervisord -c supervisord.conf`.
+
+---
+
+# TODO:
+1) Add and spread traceid
+2) Use Diska as a DI
+3) Consumers scalability
+4) Try celery like task routing for rabbit consumer
+5) Try to use different topics/queues for different tasks, retries, backoff, jitters
+6) Try sync/async flow for fast stream
+7) Add cli tooling to send messages to kafka or rabbit
+8) Fix run all, fix local runs

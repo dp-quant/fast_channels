@@ -29,8 +29,8 @@ rpc = "src.transport.serve:rpc"
 rabbit = "src.transport.serve:rabbit"
 kafka = "src.transport.serve:kafka"
 
-# run all transports
-run_all = "src.transport.serve:run_all"
+# run all transports (supervisord)
+all = "src.transport.serve:run_all"
 
 
 [build-system]
@@ -39,3 +39,8 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src"]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.15.2",
+]

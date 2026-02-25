@@ -7,7 +7,7 @@ WORKDIR /app
 RUN pip install --no-cache-dir uv
 
 # Copy project, sync deps and generate gRPC
-COPY pyproject.toml uv.lock README.md ./
+COPY pyproject.toml uv.lock README.md supervisord.conf ./
 COPY src ./src
 COPY scripts ./scripts
 RUN uv sync --frozen 
@@ -16,5 +16,6 @@ RUN uv run cli proto
 ENV PYTHONUNBUFFERED=1
 ENV PATH="/app/.venv/bin:$PATH"
 
-# Default: HTTP API via uv script (overridden by compose for rpc/rabbit/kafka)
-CMD ["uv", "run", "http"]
+# Default: supervisord (http + rpc + rabbit + kafka). Override in compose for single-service containers.
+# TODO: need to find the way to properly handle .env files in project root
+CMD ["uv", "run", "all"]

@@ -1,5 +1,4 @@
-"""CLI entrypoint (Fire) — real CLI actions only: proto, generate-jwt, send_task, send_event."""
-
+"""CLI entrypoint (Fire) — proto, JWT, and producer helpers."""
 
 from datetime import datetime, timezone
 import random
@@ -7,12 +6,14 @@ import string
 import subprocess
 import sys
 import uuid
-import requests
 from pathlib import Path
+
 import fire
+import requests
 
 from src.core.logging import logger
 from src.schemas.commands import ActionCreate
+from src.transport.producers import publish_kafka_event, publish_rabbit_task
 from src.usecases.action import create_action
 
 def proto():
@@ -62,12 +63,28 @@ def send_event(base_url: str = "http://localhost:8000"):
     logger.info(f"202 {url} -> {req.json()}")
 
 
+def rabbit_producer(message: str = "hello from producer"):
+    """Publish a single message directly to RabbitMQ `tasks` queue."""
+    # TODO: try to communicate with rabbitmq directly
+    import asyncio
+    asyncio.run(publish_rabbit_task(message))
+
+
+def kafka_producer(message: str = "hello from producer"):
+    """Publish a single message directly to Kafka `events` topic."""
+    # TODO: try to communicate with kafka directly
+    import asyncio
+    asyncio.run(publish_kafka_event(message))
+
+
 def main():
     fire.Fire({
         "proto": proto,
         "generate-jwt": generate_jwt,
         "send-task": send_task,
         "send-event": send_event,
+        "rabbit-producer": rabbit_producer,
+        "kafka-producer": kafka_producer,
     })
 
 

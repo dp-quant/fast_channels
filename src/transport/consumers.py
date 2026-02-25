@@ -14,7 +14,7 @@ from src.core import settings
 from src.schemas.proto.transforms.action import action_to_proto, proto_to_action
 from src.transport.producers import publish_rabbit_task
 from src.usecases.action import update_action
-from src.schemas.entities import Action
+from src.schemas.entities import Action, ActionContext
 from src.schemas.proto import action_pb2_grpc
 
 # ----- RabbitMQ (simple queue) -----
@@ -54,10 +54,7 @@ kafka_app = FastStream(kafka_broker, logger=logger)
 async def on_kafka_event(msg: str):
     logger.info("Kafka received: {}", msg)
     action = Action(**orjson.loads(msg))
-    action = update_action(action, {
-        'seed': random.randint(1, 1000000),
-        'updated_at': datetime.now()
-    })
+    action = update_action(action, context=ActionContext(seed=random.randint(1, 1000000)))
     payload = orjson.dumps(action.model_dump(mode="json")).decode()
     await publish_rabbit_task(payload)
     logger.info("Kafka updated: {}", action)
