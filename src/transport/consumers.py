@@ -52,7 +52,7 @@ kafka_broker = KafkaBroker(settings.kafka_bootstrap_servers, logger=logger)
 kafka_app = FastStream(kafka_broker, logger=logger)
 
 
-@kafka_broker.subscriber(settings.kafka_topic)
+@kafka_broker.subscriber(settings.kafka_topic, group_id=settings.kafka_consumer_group)
 async def on_kafka_event(msg: str):
     logger.info("Kafka received: {}", msg)
     action = Action(**orjson.loads(msg))

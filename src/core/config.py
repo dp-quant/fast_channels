@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     # Kafka
     kafka_bootstrap_servers: str = "kafka:9092"
     kafka_topic: str = "events"
+    kafka_consumer_group: str = "fast_channels_events"
 
     # HTTP
     http_host: str = "0.0.0.0"
