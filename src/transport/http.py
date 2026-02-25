@@ -57,6 +57,7 @@ async def events_publish(action: Action):
 
 def run():
     import uvicorn
+
     uvicorn.run(
         "src.transport.http:app",
         host=settings.http_host,

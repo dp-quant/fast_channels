@@ -27,7 +27,9 @@ async def on_rabbit_task(msg: str):
     logger.info("RabbitMQ received: {}", msg)
     action = Action(**orjson.loads(msg))
     req = action_to_proto(action)
-    with grpc.insecure_channel(f"{settings.grpc_host_internal}:{settings.grpc_port}") as channel:
+    with grpc.insecure_channel(
+        f"{settings.grpc_host_internal}:{settings.grpc_port}"
+    ) as channel:
         stub = action_pb2_grpc.ActionServiceStub(channel)
         resp = stub.Update(req)
         logger.info("gRPC response: {}", resp)
@@ -54,7 +56,9 @@ kafka_app = FastStream(kafka_broker, logger=logger)
 async def on_kafka_event(msg: str):
     logger.info("Kafka received: {}", msg)
     action = Action(**orjson.loads(msg))
-    action = update_action(action, context=ActionContext(seed=random.randint(1, 1000000)))
+    action = update_action(
+        action, context=ActionContext(seed=random.randint(1, 1000000))
+    )
     payload = orjson.dumps(action.model_dump(mode="json")).decode()
     await publish_rabbit_task(payload)
     logger.info("Kafka updated: {}", action)

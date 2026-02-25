@@ -8,8 +8,10 @@ from pydantic import BaseModel, Field
 
 class ActionContext(BaseModel):
     """Action context."""
+
     seed: int = 0
     updated_at: datetime = Field(default_factory=datetime.now)
+
 
 class Action(BaseModel):
     """Action (entity representation)."""
@@ -23,7 +25,9 @@ class Action(BaseModel):
 
     def __init__(self, **data: Any):
         if not data.get("context"):
-            data["context"] = ActionContext(seed=random.randint(1, 1000000), updated_at=datetime.now())
+            data["context"] = ActionContext(
+                seed=random.randint(1, 1000000), updated_at=datetime.now()
+            )
 
         super().__init__(**data)
 

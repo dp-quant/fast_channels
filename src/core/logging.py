@@ -18,14 +18,14 @@ def serialize(record):
     }
     if "extra" in record:
         subset.update(record["extra"])
-    
+
     if exc_info := subset.get("exc_info"):
         subset["exception"] = {
             "type": exc_info.__class__.__name__,
             "message": str(exc_info),
             "traceback": traceback.format_exception(exc_info),
         }
-        subset.pop('exc_info', None)
+        subset.pop("exc_info", None)
     return orjson.dumps(subset).decode("utf-8")
 
 
@@ -39,5 +39,6 @@ def configure_logger(settings: Settings) -> None:
     """Configure the logger."""
     logger.remove()
     logger.add(sink, level=settings.log_level.upper())
+
 
 configure_logger(settings)

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Generate gRPC Python code from proto files (output under app/schemas/proto)."""
+
 import re
 import subprocess
 import sys

@@ -70,9 +70,11 @@ class ActionServicer(action_pb2_grpc.ActionServiceServicer):
         # In a real app we'd load Action by id; here we rebuild from the request.
         action = proto_to_action(request)
 
-        updated = update_action(    
+        updated = update_action(
             action,
-            ActionContext(seed=random.randint(1, 1000000), updated_at=datetime.now(timezone.utc)),
+            ActionContext(
+                seed=random.randint(1, 1000000), updated_at=datetime.now(timezone.utc)
+            ),
         )
         return action_to_proto(updated)
 

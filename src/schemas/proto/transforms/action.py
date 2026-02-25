@@ -23,7 +23,6 @@ def actioncontext_to_proto(ctx: ActionContext) -> action_pb2.ActionContext:
     return action_pb2.ActionContext(seed=ctx.seed, updated_at=ts)
 
 
-
 def action_to_proto(action: Action) -> action_pb2.Action:
     """Map internal Action model to gRPC Action message."""
     created_ts = datetime_to_timestamp(action.created_at)
@@ -35,6 +34,7 @@ def action_to_proto(action: Action) -> action_pb2.Action:
         context=actioncontext_to_proto(action.context),
         created_at=created_ts,
     )
+
 
 def proto_to_action(msg: action_pb2.Action) -> Action:
     """Map proto Action to internal Action."""

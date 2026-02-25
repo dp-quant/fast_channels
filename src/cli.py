@@ -16,6 +16,7 @@ from src.schemas.commands import ActionCreate
 from src.transport.producers import publish_kafka_event, publish_rabbit_task
 from src.usecases.action import create_action
 
+
 def proto():
     """Generate gRPC Python code from proto files."""
     script = Path(__file__).resolve().parent.parent / "scripts" / "generate_grpc.py"
@@ -44,7 +45,6 @@ def generate_jwt(
     logger.info(token)
 
 
-
 def send_task(base_url: str = "http://localhost:8000"):
     """POST random payload to localhost /tasks (RabbitMQ producer)."""
     url = f"{base_url.rstrip('/')}/tasks"
@@ -67,6 +67,7 @@ def rabbit_producer(message: str = "hello from producer"):
     """Publish a single message directly to RabbitMQ `tasks` queue."""
     # TODO: try to communicate with rabbitmq directly
     import asyncio
+
     asyncio.run(publish_rabbit_task(message))
 
 
@@ -74,19 +75,21 @@ def kafka_producer(message: str = "hello from producer"):
     """Publish a single message directly to Kafka `events` topic."""
     # TODO: try to communicate with kafka directly
     import asyncio
+
     asyncio.run(publish_kafka_event(message))
 
 
 def main():
-    fire.Fire({
-        "proto": proto,
-        "generate-jwt": generate_jwt,
-        "send-task": send_task,
-        "send-event": send_event,
-        "rabbit-producer": rabbit_producer,
-        "kafka-producer": kafka_producer,
-    })
-
+    fire.Fire(
+        {
+            "proto": proto,
+            "generate-jwt": generate_jwt,
+            "send-task": send_task,
+            "send-event": send_event,
+            "rabbit-producer": rabbit_producer,
+            "kafka-producer": kafka_producer,
+        }
+    )
 
 
 def _generate_random_payload() -> dict:
@@ -103,15 +106,17 @@ def _generate_random_payload() -> dict:
     # Ensure all fields are JSON-serializable (e.g. datetimes -> ISO strings)
     return action.model_dump(mode="json")
 
+
 def _create_request_session(generate_trace_id: bool = False) -> requests.Session:
     """Get a requests session with a timeout."""
     session = requests.Session()
-    session.headers.update({
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-    })
+    session.headers.update(
+        {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        }
+    )
     if generate_trace_id:
         session.headers["X-Request-Id"] = str(uuid.uuid4())
         session.headers["X-Request-Timestamp"] = datetime.now(timezone.utc).isoformat()
     return session
-

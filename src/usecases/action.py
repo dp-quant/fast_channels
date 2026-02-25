@@ -8,6 +8,7 @@ from src.core.logging import logger
 from src.schemas.commands import ActionCreate
 from src.schemas.entities import Action, ActionContext
 
+
 def create_action(cmd: ActionCreate) -> Action:
     """Create action from command; returns internal result model."""
     logger.info("Action create: {}", cmd.model_dump())
@@ -21,8 +22,9 @@ def create_action(cmd: ActionCreate) -> Action:
     action.add_context(context)
     return action
 
+
 def update_action(action: Action, context: ActionContext) -> Action:
     """Update action from command; returns internal result model."""
-    
+
     action.add_context(context)
     return action
