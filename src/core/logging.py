@@ -2,7 +2,6 @@
 
 import orjson
 import sys
-import traceback
 from loguru import logger
 from opentelemetry import trace
 from src.core.config import settings, Settings
@@ -17,13 +16,11 @@ def otel_patcher(record):
     into the record's extra dictionary.
     """
     span_context = trace.get_current_span().get_span_context()
-
-    # OTel Trace Correlation
+    
     if span_context.is_valid:
         record["extra"]["trace_id"] = format(span_context.trace_id, "032x")
         record["extra"]["span_id"] = format(span_context.span_id, "016x")
 
-    # OTel Semantic Mapping
     record["extra"]["severity_text"] = record["level"].name
     record["extra"]["service.name"] = settings.service_name
     record["extra"]["service.version"] = settings.version
@@ -62,13 +59,14 @@ def sink(message):
     print(serialized, file=sys.stdout)
 
 
-def configure_logger(settings: Settings) -> None:
-    """Configure the logger."""
-    global logger
+def configure_logger(settings: Settings):
+    """Configure and return a patched logger."""
+    base_logger = logger
+    base_logger.remove()
+    
+    patched_logger = base_logger.patch(otel_patcher)
+    patched_logger.add(sink, level=settings.log_level.upper())
+    return patched_logger
 
-    logger.remove()
-    logger = logger.patch(otel_patcher)
-    logger.add(sink, level=settings.log_level.upper())
 
-
-configure_logger(settings)
+logger = configure_logger(settings)
