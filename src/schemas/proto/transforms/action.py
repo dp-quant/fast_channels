@@ -36,8 +36,33 @@ def action_to_proto(action: Action) -> action_pb2.Action:
     )
 
 
+def action_to_reseed_proto(action: Action):
+    """Map internal Action to gRPC ActionReseed message (same shape as Action)."""
+    created_ts = datetime_to_timestamp(action.created_at)
+    return action_pb2.ActionReseed(
+        id=action.id,
+        name=action.name,
+        description=action.description,
+        tags=list(action.tags),
+        context=actioncontext_to_proto(action.context),
+        created_at=created_ts,
+    )
+
+
 def proto_to_action(msg: action_pb2.Action) -> Action:
     """Map proto Action to internal Action."""
+    return Action(
+        id=msg.id,
+        name=msg.name,
+        description=msg.description,
+        tags=set(msg.tags),
+        context=proto_to_actioncontext(msg.context),
+        created_at=timestamp_to_datetime(msg.created_at),
+    )
+
+
+def proto_reseed_to_action(msg) -> Action:
+    """Map proto ActionReseed to internal Action (same shape as Action)."""
     return Action(
         id=msg.id,
         name=msg.name,

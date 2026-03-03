@@ -1,30 +1,61 @@
-"""Shared business logic (service layer)."""
+"""Shared business logic (service layer) — UseCase protocol and implementations."""
 
 from datetime import datetime
 import random
 import uuid
+from typing import Protocol, TypeVar
+
 from src.core.logging import logger
 
-from src.schemas.commands import ActionCreate
+from src.schemas.commands import ActionCreate, ReseedCommand
 from src.schemas.entities import Action, ActionContext
 
+In = TypeVar("In")
+Out = TypeVar("Out")
 
-def create_action(cmd: ActionCreate) -> Action:
+
+class UseCase(Protocol[In, Out]):
+    """Protocol for use cases: process(command) -> result."""
+
+    def process(self, command: In) -> Out:
+        ...
+        raise NotImplementedError
+
+
+class CreateActionUseCase:
     """Create action from command; returns internal result model."""
-    logger.info("Action create: {}", cmd.model_dump())
-    action = Action(
-        id=str(uuid.uuid4()),
-        name=cmd.name,
-        description=cmd.description,
-        tags=cmd.tags,
-    )
-    context = ActionContext(seed=random.randint(1, 1000000))
-    action.add_context(context)
-    return action
+
+    def process(self, command: ActionCreate) -> Action:
+        logger.info("Action create: {}", command.model_dump())
+        action = Action(
+            id=str(uuid.uuid4()),
+            name=command.name,
+            description=command.description,
+            tags=command.tags,
+        )
+        context = ActionContext(seed=random.randint(1, 1000000))
+        action.add_context(context)
+        return action
 
 
-def update_action(action: Action, context: ActionContext) -> Action:
-    """Update action from command; returns internal result model."""
+class ReseedActionUseCase:
+    """Reseed action with new context; returns updated action."""
 
-    action.add_context(context)
-    return action
+    def process(self, command: ReseedCommand) -> Action:
+        command.action.add_context(command.context)
+        return command.action
+
+
+# Convenience instances for backward-compatible call sites
+create_action_use_case = CreateActionUseCase()
+reseed_action_use_case = ReseedActionUseCase()
+
+
+def create_action(command: ActionCreate) -> Action:
+    """Backward-compatible: create action from command."""
+    return create_action_use_case.process(command)
+
+
+def reseed_action(action: Action, context: ActionContext) -> Action:
+    """Backward-compatible: reseed action with new context."""
+    return reseed_action_use_case.process(ReseedCommand(action=action, context=context))

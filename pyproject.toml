@@ -18,6 +18,8 @@ dependencies = [
     "pyjwt>=2.8.0",
     "requests>=2.32.5",
     "opentelemetry-api>=1.39.1",
+    "ruff>=0.15.2",
+    "mypy>=1.19.1",
 ]
 
 [project.scripts]

@@ -11,11 +11,12 @@ from google.protobuf import timestamp_pb2
 from src.core import settings
 from src.core.logging import logger
 from src.schemas.commands import ActionCreate
-from src.schemas.proto.transforms.action import action_to_proto, proto_to_action
+from src.schemas.proto.transforms.action import action_to_proto, proto_reseed_to_action
 from src.transport.producers import publish_kafka_event, publish_rabbit_task
-from src.usecases.action import create_action, update_action
+from src.usecases.action import create_action_use_case, reseed_action_use_case
+from src.schemas.commands import ReseedCommand
 from src.schemas.entities import ActionContext
-from src.usecases.echo import echo_message
+from src.usecases.echo import echo_use_case
 
 try:
     from src.schemas.proto import echo_pb2, echo_pb2_grpc, action_pb2, action_pb2_grpc
@@ -28,7 +29,7 @@ except ImportError as e:
 class EchoServicer(echo_pb2_grpc.EchoServiceServicer):
     def Echo(self, request, context):
         logger.info("gRPC Echo request: {}", request.message)
-        reply_msg = echo_message(request.message)
+        reply_msg = echo_use_case.process(request.message)
 
         # Fan-out to messaging backends (fire-and-forget style)
         try:
@@ -60,23 +61,25 @@ class ActionServicer(action_pb2_grpc.ActionServiceServicer):
             description=request.description,
             tags=list(request.tags),
         )
-        action = create_action(cmd)
+        action = create_action_use_case.process(cmd)
 
         return action_to_proto(action)
 
-    def Update(self, request, context):
-        logger.info("gRPC Action.Update: id={}", request.id)
+    def Reseed(self, request, context):
+        logger.info("gRPC Action.Reseed: id={}", request.id)
 
         # In a real app we'd load Action by id; here we rebuild from the request.
-        action = proto_to_action(request)
+        action = proto_reseed_to_action(request)
 
-        updated = update_action(
-            action,
-            ActionContext(
-                seed=random.randint(1, 1000000), updated_at=datetime.now(timezone.utc)
-            ),
+        reseeded = reseed_action_use_case.process(
+            ReseedCommand(
+                action=action,
+                context=ActionContext(
+                    seed=random.randint(1, 1000000), updated_at=datetime.now(timezone.utc)
+                ),
+            )
         )
-        return action_to_proto(updated)
+        return action_to_proto(reseeded)
 
 
 def run():

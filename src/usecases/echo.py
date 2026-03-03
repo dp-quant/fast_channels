@@ -1,9 +1,19 @@
-"""Shared business logic (service layer)."""
+"""Shared business logic (service layer) — Echo use case."""
 
 from src.core.logging import logger
 
 
-def echo_message(message: str) -> str:
+class EchoUseCase:
     """Echo service (used by gRPC and HTTP)."""
-    logger.info("Echo message: {}", message)
-    return message
+
+    def process(self, message: str) -> str:
+        logger.info("Echo message: {}", message)
+        return message
+
+
+echo_use_case = EchoUseCase()
+
+
+def echo_message(message: str) -> str:
+    """Backward-compatible: echo message."""
+    return echo_use_case.process(message)

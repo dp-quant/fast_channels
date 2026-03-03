@@ -14,8 +14,8 @@ service ActionService {
   // Create a new Action.
   rpc Create (ActionCreate) returns (Action);
 
-  // Update an existing Action.
-  rpc Update (ActionUpdate) returns (Action);
+  // Reseed an existing Action (set new context/seed).
+  rpc Reseed (ActionReseed) returns (Action);
 }
 
 // Command to create an Action (mirrors HTTP ActionCreate).
@@ -26,8 +26,8 @@ message ActionCreate {
   ActionContext context = 4;
 }
 
-// Command to update an Action.
-message ActionUpdate {
+// Command to reseed an Action (set new context).
+message ActionReseed {
   string id = 1;
   string name = 2;
   string description = 3;

@@ -8,7 +8,7 @@ from src.schemas.commands import ActionCreate
 from src.schemas.entities import Action
 from src.transport.producers import publish_kafka_event, publish_rabbit_task
 from src.usecases.action import create_action
-from src.usecases.echo import echo_message
+from src.usecases.echo import echo_use_case
 
 app = FastAPI(title="fast_channels", version="0.1.0")
 
@@ -30,7 +30,7 @@ async def echo(body: dict = Body(...)) -> dict:
 
 @app.post("/echo/{message:path}")
 async def echo_path(message: str) -> dict:
-    return {"message": echo_message(message)}
+    return {"message": echo_use_case.process(message)}
 
 
 @app.post("/actions", response_model=Action)
