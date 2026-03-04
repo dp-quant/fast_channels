@@ -61,12 +61,11 @@ def sink(message):
 
 def configure_logger(settings: Settings):
     """Configure and return a patched logger."""
-    base_logger = logger
-    base_logger.remove()
+    logger.remove()
     
-    patched_logger = base_logger.patch(otel_patcher)
+    patched_logger = logger.patch(otel_patcher)
     patched_logger.add(sink, level=settings.log_level.upper())
     return patched_logger
 
 
-logger = configure_logger(settings)
+configure_logger(settings)

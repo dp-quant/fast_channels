@@ -14,7 +14,6 @@ class Settings(BaseSettings):
 
     # service version
     version: str = "0.1.0"
-    service_name: str = "fast_channels"
     
     # RabbitMQ
     rabbit_url: str = "amqp://guest:guest@rabbitmq:5672/"
