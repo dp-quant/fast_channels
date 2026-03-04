@@ -32,7 +32,7 @@ def generate_jwt(
     try:
         import jwt
         from datetime import datetime, timedelta, timezone
-    except ImportError as e:
+    except ImportError:
         logger.error("Install PyJWT: uv add pyjwt")
         sys.exit(1)
     now = datetime.now(timezone.utc)
@@ -94,7 +94,7 @@ def main():
 
 def _generate_random_payload() -> dict:
     """Small random payload for send_task / send_event."""
-    action = ActionCreate(
+    action_cmd = ActionCreate(
         name="".join(random.choices(string.ascii_lowercase, k=8)),
         description="".join(random.choices(string.ascii_lowercase, k=16)),
         tags=[
@@ -102,7 +102,7 @@ def _generate_random_payload() -> dict:
             for _ in range(random.randint(1, 5))
         ],
     )
-    action = create_action(action)
+    action = create_action(action_cmd)
     # Ensure all fields are JSON-serializable (e.g. datetimes -> ISO strings)
     return action.model_dump(mode="json")
 

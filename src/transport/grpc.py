@@ -6,7 +6,6 @@ from concurrent import futures
 from datetime import datetime, timezone
 
 import grpc
-from google.protobuf import timestamp_pb2
 
 from src.core import settings
 from src.core.logging import logger
@@ -19,7 +18,7 @@ from src.schemas.entities import ActionContext
 from src.usecases.echo import echo_use_case
 
 try:
-    from src.schemas.proto import echo_pb2, echo_pb2_grpc, action_pb2, action_pb2_grpc
+    from src.schemas.proto import action_pb2_grpc, echo_pb2, echo_pb2_grpc
 except ImportError as e:
     raise ImportError(
         "gRPC code not generated. Run: uv run cli proto (or build Docker image)"

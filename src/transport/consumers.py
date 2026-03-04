@@ -1,7 +1,6 @@
 """FastStream (Kafka / RabbitMQ) consumer logic."""
 
 import grpc
-from datetime import datetime
 import asyncio
 import random
 import orjson

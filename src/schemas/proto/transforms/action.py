@@ -1,4 +1,3 @@
-from google.protobuf import timestamp_pb2
 from datetime import datetime, timezone
 
 from src.schemas.entities import Action, ActionContext

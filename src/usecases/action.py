@@ -1,6 +1,5 @@
 """Shared business logic (service layer) — UseCase protocol and implementations."""
 
-from datetime import datetime
 import random
 import uuid
 from typing import Protocol, TypeVar
@@ -10,8 +9,8 @@ from src.core.logging import logger
 from src.schemas.commands import ActionCreate, ReseedCommand
 from src.schemas.entities import Action, ActionContext
 
-In = TypeVar("In")
-Out = TypeVar("Out")
+In = TypeVar("In", contravariant=True)
+Out = TypeVar("Out", covariant=True)
 
 
 class UseCase(Protocol[In, Out]):
