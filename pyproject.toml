@@ -5,7 +5,6 @@ description = "FastAPI + FastStream (Kafka, RabbitMQ) + gRPC experiments"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "fastapi>=0.115.0",
     "uvicorn[standard]>=0.32.0",
     "faststream[rabbit,kafka]>=0.5.0",
     "grpcio>=1.68.0",
@@ -20,6 +19,7 @@ dependencies = [
     "opentelemetry-api>=1.39.1",
     "ruff>=0.15.2",
     "mypy>=1.19.1",
+    "starlette>=0.52.1",
 ]
 
 [project.scripts]
@@ -45,5 +45,9 @@ packages = ["src"]
 
 [dependency-groups]
 dev = [
+    "grpcio-tools>=1.78.1",
+    "mypy-protobuf>=5.0.0",
     "ruff>=0.15.2",
+    "types-protobuf>=6.32.1.20260221",
+    "types-requests>=2.32.4.20260107",
 ]
